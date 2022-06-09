@@ -6,7 +6,7 @@ import pytest
 
 from .....checkout.error_codes import CheckoutErrorCode
 from .....checkout.fetch import fetch_checkout_info, fetch_checkout_lines
-from .....checkout.utils import PRIVATE_META_APP_SHIPPING_ID
+from .....checkout.utils import PRIVATE_META_APP_SHIPPING_ID, invalidate_checkout_prices
 from .....plugins.manager import get_plugins_manager
 from .....shipping import models as shipping_models
 from .....shipping.utils import convert_to_shipping_method_data
@@ -59,7 +59,13 @@ MUTATION_UPDATE_DELIVERY_METHOD = """
     "saleor.graphql.checkout.mutations.checkout_delivery_method_update."
     "clean_delivery_method"
 )
+@patch(
+    "saleor.graphql.checkout.mutations.checkout_delivery_method_update."
+    "invalidate_checkout_prices",
+    wraps=invalidate_checkout_prices,
+)
 def test_checkout_delivery_method_update(
+    mock_invalidate_checkout_prices,
     mock_clean_delivery,
     api_client,
     delivery_method,
@@ -100,6 +106,7 @@ def test_checkout_delivery_method_update(
     if is_valid_delivery_method:
         assert not errors
         assert getattr(checkout, attribute_name) == delivery_method
+        assert mock_invalidate_checkout_prices.call_count == 1
     else:
         assert len(errors) == 1
         assert errors[0]["field"] == "deliveryMethodId"
