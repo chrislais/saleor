@@ -13,6 +13,7 @@ from ...account.types import AddressInput
 from ...core.types import OrderError
 from ..types import Order
 from .draft_order_create import DraftOrderCreate
+from .utils import update_order_display_gross_prices
 
 
 class OrderUpdateInput(graphene.InputObjectType):
@@ -71,6 +72,7 @@ class OrderUpdate(DraftOrderCreate):
             user = User.objects.filter(email=instance.user_email).first()
             instance.user = user
         instance.search_vector = prepare_order_search_vector_value(instance)
+        update_order_display_gross_prices(instance)
         instance.save()
         update_order_prices(
             instance,

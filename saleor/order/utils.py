@@ -185,11 +185,12 @@ def recalculate_order(order: Order, **kwargs):
 
     order.save(
         update_fields=[
+            "currency",
+            "display_gross_prices",
             "total_net_amount",
             "total_gross_amount",
             "undiscounted_total_net_amount",
             "undiscounted_total_gross_amount",
-            "currency",
             "updated_at",
         ]
     )

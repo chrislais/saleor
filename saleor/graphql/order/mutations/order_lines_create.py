@@ -20,7 +20,11 @@ from ..utils import (
     validate_variant_channel_listings,
 )
 from .draft_order_create import OrderLineCreateInput
-from .utils import EditableOrderValidationMixin, get_webhook_handler_by_order_status
+from .utils import (
+    EditableOrderValidationMixin,
+    get_webhook_handler_by_order_status,
+    update_order_display_gross_prices,
+)
 
 
 class OrderLinesCreate(EditableOrderValidationMixin, BaseMutation):
@@ -135,6 +139,7 @@ class OrderLinesCreate(EditableOrderValidationMixin, BaseMutation):
 
         lines = [line for _, line in added_lines]
 
+        update_order_display_gross_prices(order)
         recalculate_order(order)
         update_order_search_vector(order)
 

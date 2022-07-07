@@ -11,7 +11,11 @@ from ....order.utils import delete_order_line, recalculate_order
 from ...core.mutations import BaseMutation
 from ...core.types import OrderError
 from ..types import Order, OrderLine
-from .utils import EditableOrderValidationMixin, get_webhook_handler_by_order_status
+from .utils import (
+    EditableOrderValidationMixin,
+    get_webhook_handler_by_order_status,
+    update_order_display_gross_prices,
+)
 
 
 class OrderLineDelete(EditableOrderValidationMixin, BaseMutation):
@@ -78,6 +82,7 @@ class OrderLineDelete(EditableOrderValidationMixin, BaseMutation):
             order_lines=[(line.quantity, line)],
         )
 
+        update_order_display_gross_prices(order)
         recalculate_order(order)
         update_order_search_vector(order)
         func = get_webhook_handler_by_order_status(order.status, info)

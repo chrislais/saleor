@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from django.core.exceptions import ValidationError
 
 from ....order import OrderStatus, events
@@ -5,7 +7,12 @@ from ....order.error_codes import OrderErrorCode
 from ....payment import PaymentError
 from ....plugins.manager import PluginsManager
 from ....shipping.interface import ShippingMethodData
+from ....tax.utils import get_display_gross_prices, get_tax_country
 from ..utils import get_shipping_method_availability_error
+
+if TYPE_CHECKING:
+    from ....order.models import Order
+
 
 ORDER_EDITABLE_STATUS = (OrderStatus.DRAFT, OrderStatus.UNCONFIRMED)
 
@@ -79,3 +86,22 @@ def clean_payment(payment):
                 )
             }
         )
+
+
+def update_order_display_gross_prices(order: "Order"):
+    # Update order.display_gross_prices flag based on current lines and
+    # addresses, without saving to the database.
+    channel = order.channel
+    tax_configuration = channel.tax_configuration
+    country_code = get_tax_country(
+        channel,
+        order.is_shipping_required(),
+        order.shipping_address,
+        order.billing_address,
+    )
+    country_tax_configuration = tax_configuration.country_exceptions.filter(
+        country=country_code
+    ).first()
+    order.display_gross_prices = get_display_gross_prices(
+        tax_configuration, country_tax_configuration
+    )

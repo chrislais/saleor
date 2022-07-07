@@ -148,7 +148,16 @@ class TaxConfigurationUpdate(ModelMutation):
         ).delete()
 
     @classmethod
+    def update_display_gross_prices_for_editable_orders(cls, instance):
+        pass
+
+    @classmethod
     def save(cls, _info, instance, cleaned_input):
+        # todo: check if display_gross_prices was updated for this instance, or for any
+        # country config; if yes:
+        # - update editable orders in this channel
+        # - update editable orders in this channel for which country config was changed?
+
         instance.save()
         update_countries_configuration = cleaned_input.get(
             "update_countries_configuration", []
@@ -158,3 +167,4 @@ class TaxConfigurationUpdate(ModelMutation):
         )
         cls.update_countries_configuration(instance, update_countries_configuration)
         cls.remove_countries_configuration(remove_countries_configuration)
+        cls.update_countries_configuration(instance)
